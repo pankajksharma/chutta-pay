@@ -1,0 +1,86 @@
+package com.chuttapay.android;
+
+
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.Toast;
+
+public class RegistrationFragment extends Fragment
+{
+	private final static String SERVER_ADDRESS = "http://engineerinme.com:5000";
+	private String number,password = null;
+	private EditText edt_number, edt_password;
+	private CheckBox checkbox;
+	private Button btn_login;
+	
+	private static final String LOG_TAG = "RegFragment";
+
+	@Override
+	public View onCreateView( LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState )
+	{
+		final View rootView = inflater.inflate( R.layout.fragment_registration, container, false );
+		
+		edt_number = (EditText) rootView.findViewById(R.id.edt_mobileno);
+		edt_password = (EditText) rootView.findViewById(R.id.edt_password);
+		checkbox = (CheckBox) rootView.findViewById(R.id.cb_agreetotermsandconditions);
+		btn_login = (Button) rootView.findViewById(R.id.btn_submit);
+		btn_login.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View arg0) {
+				number = edt_number.getText().toString();
+				password = edt_password.getText().toString();
+				if(number == null || number.length() != 10){
+					Toast.makeText(getActivity(), "Phone Number should be of 10 digits.", Toast.LENGTH_LONG).show();
+				}
+				else if(password == null || password.length() < 6){
+					Toast.makeText(getActivity(), "Password should be atleast of 6 characters.", Toast.LENGTH_LONG).show();
+				}
+				else if(!checkbox.isChecked()){
+					Toast.makeText(getActivity(), "You must agree to our terms and conditions.", Toast.LENGTH_LONG).show();
+				}
+				else{
+					JSONObject params = new JSONObject();
+					try {
+						params.put("phone_no", number);
+						params.put("passwd", password);
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+					
+					AsyncRequest request = new AsyncRequest(getActivity(), SERVER_ADDRESS+"/api/user/add", "POST", params.toString(), new OnTaskCompleted() {
+						
+						@Override
+						public void onTaskCompleted(JSONObject object) {
+							if(object != null && object.has("user_id")){
+								String user_id;
+								try {
+									user_id = object.getString("user_id");
+								} catch (JSONException e) {
+									e.printStackTrace();
+								}
+								SharedPreferences settings = RegistrationFragment.this.getActivity().getApplicationContext().getSharedPreferences(PREFS_NAME, 0);
+								SharedPreferences.Editor editor = settings.edit();
+								editor.putInt("homeScore", YOUR_HOME_SCORE);
+							}
+						}
+					});
+				}
+			}
+		});
+		return rootView;
+	}	
+	
+}

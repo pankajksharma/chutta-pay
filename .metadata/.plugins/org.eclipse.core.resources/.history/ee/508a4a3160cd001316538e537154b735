@@ -1,0 +1,50 @@
+package com.chuttapay.android;
+
+import static com.chuttapay.android.Constants.SERVER_ADDRESS;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
+
+public class AccountActivity extends ActionBarActivity {
+	private String user_id = null;
+	protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_account);
+        
+        SharedPreferences settings = getApplicationContext().getSharedPreferences("user_id", 0);
+        user_id = settings.getString("user_id", null);
+        
+        AsyncRequest request = new AsyncRequest(getActivity(), SERVER_ADDRESS+"api/user/add", "POST", params, new OnTaskCompleted() {
+			
+			@Override
+			public void onTaskCompleted(JSONObject object) {
+				if(object != null){
+					String user_id = null;
+					try {
+						JSONObject items = (JSONObject) object.getJSONArray("items").get(0);
+						user_id = items.getString("user_id");
+//						Toast.makeText(getActivity(), user_id, Toast.LENGTH_LONG).show();
+						getActivity().getSupportFragmentManager().beginTransaction()
+		                .add(R.id.container, new PaymentFragment())
+		                .commit();
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+					SharedPreferences settings = RegistrationFragment.this.getActivity().getApplicationContext().getSharedPreferences("user_id", 0);
+					SharedPreferences.Editor editor = settings.edit();
+					editor.putString("user_id", user_id);
+					editor.commit();
+				}
+				else{
+					//send via message
+				}
+			}
+		});
+		request.execute(SERVER_ADDRESS+"api/user/add");
+		
+    }
+}

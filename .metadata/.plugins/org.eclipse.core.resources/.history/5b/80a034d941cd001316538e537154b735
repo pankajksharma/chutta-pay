@@ -1,0 +1,33 @@
+package com.example.chuttapay;
+
+
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
+
+public class RegistrationFragment extends Fragment
+{
+	private EditText edt_number, edt_password;
+	private CheckBox checkbox;
+	private Button btn_login;
+	
+	private static final String LOG_TAG = "RegFragment";
+
+	@Override
+	public View onCreateView( LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState )
+	{
+		final View rootView = inflater.inflate( R.layout.fragment_registration, container, false );
+		
+		edt_number = (EditText) rootView.findViewById(R.id.edt_mobileno);
+		edt_password = (EditText) rootView.findViewById(R.id.edt_password);
+		checkbox = (CheckBox) rootView.findViewById(R.id.cb_agreetotermsandconditions);
+		btn_login = (Button) rootView.findViewById(R.id.btn_submit);
+		return rootView;
+	}	
+	
+}

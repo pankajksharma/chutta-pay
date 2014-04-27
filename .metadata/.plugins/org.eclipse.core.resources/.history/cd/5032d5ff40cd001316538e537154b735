@@ -1,0 +1,29 @@
+package com.example.chuttapay;
+
+
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+public class RegistrationFragment extends Fragment
+{
+	private String m_mobile, m_json, m_password = null;
+	private String m_filePath = null;
+
+	private static final String LOG_TAG = "RegFragment";
+
+	@Override
+	public View onCreateView( LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState )
+	{
+		final View rootView = inflater.inflate( R.layout.fragment_registration, container, false );
+		
+		return rootView;
+	}
+
+	
+
+	
+	
+}

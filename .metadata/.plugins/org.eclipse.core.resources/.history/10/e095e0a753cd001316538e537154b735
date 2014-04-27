@@ -1,0 +1,98 @@
+package com.chuttapay.android;
+
+
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.Toast;
+import static com.chuttapay.android.Constants.*;
+
+public class PaymentFragment extends Fragment
+{
+	private String from_id, to_id, amount, password = null;
+	private EditText edt_to_id, edt_amount, edt_password;
+	private Button btn_pay;
+	
+	private static final String LOG_TAG = "RegFragment";
+
+	@Override
+	public View onCreateView( LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState )
+	{
+		final View rootView = inflater.inflate( R.layout.payment, container, false );
+		 SharedPreferences settings = getActivity().getApplicationContext().getSharedPreferences("user_id", 0);
+	     from_id = settings.getString("user_id", null);
+	       
+		edt_to_id = (EditText) rootView.findViewById(R.id.edt_user_id);
+		edt_password = (EditText) rootView.findViewById(R.id.edt_password);
+		checkbox = (CheckBox) rootView.findViewById(R.id.cb_agreetotermsandconditions);
+		btn_login = (Button) rootView.findViewById(R.id.btn_submit);
+		btn_login.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View arg0) {
+				number = edt_number.getText().toString();
+				password = edt_password.getText().toString();
+				if(number == null || number.length() != 10){
+					Toast.makeText(getActivity(), "Phone Number should be of 10 digits.", Toast.LENGTH_LONG).show();
+				}
+				else if(password == null || password.length() < 6){
+					Toast.makeText(getActivity(), "Password should be atleast of 6 characters.", Toast.LENGTH_LONG).show();
+				}
+				else if(!checkbox.isChecked()){
+					Toast.makeText(getActivity(), "You must agree to our terms and conditions.", Toast.LENGTH_LONG).show();
+				}
+				else{
+					JSONObject params = new JSONObject();
+					try {
+						params.put("phone_no", number);
+						params.put("passwd", password);
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+					
+					AsyncRequest request = new AsyncRequest(getActivity(), SERVER_ADDRESS+"api/user/add", "POST", params, new OnTaskCompleted() {
+						
+						@Override
+						public void onTaskCompleted(JSONObject object) {
+							if(object != null){
+								String user_id = null;
+								try {
+									JSONObject items = (JSONObject) object.getJSONArray("items").get(0);
+									user_id = items.getString("user_id");
+//									Toast.makeText(getActivity(), user_id, Toast.LENGTH_LONG).show();
+									getActivity().getSupportFragmentManager().beginTransaction()
+					                .add(R.id.container, new UserFragment())
+					                .commit();
+								} catch (JSONException e) {
+									e.printStackTrace();
+								}
+								SharedPreferences settings = PaymentFragment.this.getActivity().getApplicationContext().getSharedPreferences("user_id", 0);
+								SharedPreferences.Editor editor = settings.edit();
+								editor.putString("user_id", user_id);
+								editor.commit();
+							}
+							else{
+								//send via message
+							}
+						}
+					});
+					request.execute(SERVER_ADDRESS+"api/user/add");
+				}
+			}
+		});
+		return rootView;
+	}	
+	
+}

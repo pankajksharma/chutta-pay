@@ -1,0 +1,6 @@
+package com.chuttapay.android;
+
+public class Utilities {
+	static String SERVER_NAME = "Chutta Pay Server";
+	static String SERVER_ADDRESS = "http://"
+}

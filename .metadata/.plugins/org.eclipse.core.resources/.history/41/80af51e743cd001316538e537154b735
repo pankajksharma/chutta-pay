@@ -1,0 +1,146 @@
+package co.autumn.utils;
+
+import static co.autumn.android.Constants.LINKEDIN_API_KEY;
+import static co.autumn.android.Constants.LINKEDIN_SECRET_KEY;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+import oauth.signpost.OAuthConsumer;
+import oauth.signpost.basic.DefaultOAuthConsumer;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.AsyncTask;
+import android.util.Log;
+import android.widget.Toast;
+
+public class AsyncRequest extends AsyncTask<String, Void, String> {
+	
+	private Context context;
+	@SuppressWarnings("unused")
+	private String URL;
+	private String method;
+	private String params;
+	private OnTaskCompleted listener = null;
+	private final static int NETWORK_STATUS_OK = 0;
+
+	@Override
+	protected void onPostExecute(String result) {
+		super.onPostExecute(result);
+		Log.d("result", result+"");
+		if(listener != null && result != null){
+			try {
+				listener.onTaskCompleted(new JSONObject(result));
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+		}else if(result == null || !result.contains("success")){
+			Toast.makeText(context, "Failed to contact shine.com Server.", Toast.LENGTH_LONG).show();
+		}
+	}
+
+	public AsyncRequest(Context context, String url, String method, String params, OnTaskCompleted listener){
+		this.context = context;
+		this.method = method;
+		this.URL = url;
+		this.params = params;
+		this.listener = listener;
+	}
+
+	public AsyncRequest(Context context, String url, String method, String params){
+		this.context = context;
+		this.method = method;
+		this.URL = url;
+		this.params = params;
+	}
+	
+	private int networkStatus(){
+		int networkStatus = 1;
+		ConnectivityManager connMgr = (ConnectivityManager) 
+	        context.getSystemService(Context.CONNECTIVITY_SERVICE);
+	    NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+	    if (networkInfo != null && networkInfo.isConnected()) 
+		    networkStatus = 0;
+		   return networkStatus;
+	}
+
+	@Override
+	protected String doInBackground(String... urls) {
+		HttpClient httpClient = new DefaultHttpClient();
+		Log.d("inbgactivity", urls[0]);
+		if(networkStatus() == NETWORK_STATUS_OK){
+			if(method.equalsIgnoreCase("POST")){
+				try{
+					HttpPost request = new HttpPost(urls[0]);
+					Log.d("asd", this.params);
+					StringEntity parameters = new StringEntity(params);
+					request.addHeader("content-type", "application/json");
+			        request.setEntity(parameters);
+			        HttpResponse response = httpClient.execute(request);
+			        return EntityUtils.toString(response.getEntity());
+				}
+				catch(Exception e){
+					e.printStackTrace();
+					Log.d("bg exception", e.toString());
+					return null;
+				}
+			}
+			else if(method.equalsIgnoreCase("GET")){
+				try{
+					HttpGet request = new HttpGet(urls[0]);
+					HttpResponse response = httpClient.execute(request);
+			        return EntityUtils.toString(response.getEntity());
+				}
+				catch(Exception e){
+					e.printStackTrace();
+					Log.d("bg exception", e.toString());
+					return null;
+				}
+			}
+			else if(method.equalsIgnoreCase("OAUTH_GET")){
+				try{
+					OAuthConsumer consumer = new DefaultOAuthConsumer(LINKEDIN_API_KEY, LINKEDIN_SECRET_KEY);
+					consumer.setTokenWithSecret(urls[1], urls[2]);
+					 URL url = new URL(urls[0]);
+					 HttpURLConnection request = (HttpURLConnection) url.openConnection();
+					 request.setRequestMethod("GET");
+					 request.setUseCaches(true);
+					 consumer.sign(request);
+					 request.connect();
+					 BufferedReader br = new BufferedReader(new InputStreamReader(request.getInputStream()));
+		                StringBuilder sb = new StringBuilder();
+		                String line;
+		                while ((line = br.readLine()) != null) {
+		                    sb.append(line+"\n");
+		                }
+		                br.close();
+					 Log.d("as", sb.toString());
+					 return sb.toString();
+				}
+				catch(Exception e){
+					e.printStackTrace();
+					Log.d("bg exception", e.toString());
+					return null;
+				}
+			}
+			else 
+				return null;
+		}
+		else{
+			return null;
+		}
+	}
+}

@@ -1,0 +1,54 @@
+package com.chuttapay.android;
+
+import static com.chuttapay.android.Constants.SERVER_ADDRESS;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
+import android.widget.TextView;
+
+public class TransactionActivity extends ActionBarActivity {
+	private String user_id = null;
+	
+	protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_voice);
+        
+        SharedPreferences settings = getApplicationContext().getSharedPreferences("user_id", 0);
+        user_id = settings.getString("user_id", null);
+        
+        JSONObject params = new JSONObject();
+        try {
+			params.put("user_id", user_id);
+		} catch (JSONException e1) {
+			e1.printStackTrace();
+		}
+        
+        AsyncRequest request = new AsyncRequest(this, SERVER_ADDRESS+"api/transaction/getall", "POST", params, new OnTaskCompleted() {
+			
+			@Override
+			public void onTaskCompleted(JSONObject object) {
+				if(object != null){
+//					String balance = null;
+					JSONArray transactions = new JSONArray();
+					try {
+						JSONObject items = (JSONObject) object.getJSONArray("items").get(0);
+//						balance = items.getString("balance");				
+//						tvBalance.setText("INR "+balance);
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+				}
+				else{
+					//send via message
+				}
+			}
+		});
+		request.execute(SERVER_ADDRESS+"api/transaction/getall");
+		
+    }
+}

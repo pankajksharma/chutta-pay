@@ -1,0 +1,9 @@
+package com.chuttapay.android;
+
+import android.support.v4.app.Fragment;
+import android.view.View;
+
+public class UserFragment extends Fragment {
+	final View rootView = inflater.inflate( R.layout.fragment_registration, container, false );
+	
+}

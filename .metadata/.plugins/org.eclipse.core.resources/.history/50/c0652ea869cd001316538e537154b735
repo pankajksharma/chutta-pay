@@ -1,0 +1,67 @@
+package com.chuttapay.android;
+
+import static com.chuttapay.android.Constants.SERVER_ADDRESS;
+
+import java.util.List;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
+import android.widget.ArrayAdapter;
+
+public class TransactionActivity extends ActionBarActivity {
+	private String user_id = null;
+	
+	protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_voice);
+        
+        SharedPreferences settings = getApplicationContext().getSharedPreferences("user_id", 0);
+        user_id = settings.getString("user_id", null);
+        
+        JSONObject params = new JSONObject();
+        try {
+			params.put("user_id", user_id);
+		} catch (JSONException e1) {
+			e1.printStackTrace();
+		}
+        
+        AsyncRequest request = new AsyncRequest(this, SERVER_ADDRESS+"api/transaction/getall", "POST", params, new OnTaskCompleted() {
+			
+			@Override
+			public void onTaskCompleted(JSONObject object) {
+				if(object != null){
+					JSONArray transactions = new JSONArray();
+					try {
+						JSONObject items = (JSONObject) object.getJSONArray("items").get(0);
+						transactions = items.getJSONArray("transaction");
+						Log.d("as", transactions.toString());
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+				}
+				else{
+					//send via message
+				}
+			}
+		});
+		request.execute(SERVER_ADDRESS+"api/transaction/getall");
+		
+    }
+	
+	public class Adapter extends ArrayAdapter<String>{
+
+		public Adapter(Context context, int resource, int textViewResourceId,
+				List<String> objects) {
+			super(context, resource, textViewResourceId, objects);
+		}
+		
+	}
+	
+}
